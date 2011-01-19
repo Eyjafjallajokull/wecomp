@@ -1,0 +1,180 @@
+#!/usr/bin/python
+import sys, os, subprocess, stat
+import argparse
+import string
+from re import sub, findall
+
+closurePath = '/home/pawel/bin/closure'
+
+class TextCompressor:
+    """String compression class"""
+    
+    knownTypes= ['css','js','html','php']
+    
+    re = {
+        'htmlScript': '(<script.*>([^<]+)</script>)',
+        'htmlStyle': '(<style.*>([^<]+)</style>)',
+        'htmlPre': '(<(?:code|pre).*>[^<]+</(?:code|pre)>)',
+        'htmlComments': '<!--(.|\s)*?-->',
+        'htmlWhitespace1': '[\r\n\t]+',
+        'htmlWhitespace2': '([>#])[\s]+([<#])',
+        'htmlWhitespace3': '[\s]+',
+        
+        'php': '(<\?(?:php|=)[^?]+\?>)',
+        
+        'cssComments1': '//[^\n\r]+',
+        'cssWhitespace1': '[\r\n\t\s]+',
+        'cssComments2': '/\*.*?\*/',
+        'cssWhitespace2': '[\s]*([\{\},;:])[\s]*',
+        'cssWhitespace3': '^\s+',
+        'cssEnd': ';}'
+    }
+    
+    def __init__(self, type):
+        if not type in self.knownTypes:
+            print "unknown file type"
+            exit(3)
+        self.type = type
+            
+    def compress(self, input):
+        if self.type == 'html':
+            return self.compressHtml(input)
+        if self.type == 'js':
+            return self.compressJs(input)
+        if self.type == 'css':
+            return self.compressCss(input)
+        if self.type == 'php':
+            return self.compressPhp(input)
+        
+    def compressHtml(self, s):
+        scripts = findall( self.re['htmlScript'], s)
+        s = sub( self.re['htmlScript'], '#@#script#!#', s )
+        
+        styles = findall( self.re['htmlStyle'], s)
+        s = sub( self.re['htmlStyle'],  '#@#style#!#', s )
+        
+        pres = findall( self.re['htmlPre'], s)
+        s = sub( self.re['htmlPre'],    '#@#pre#!#', s )
+        
+        s = sub( self.re['htmlComments'], '', s )
+        
+        s = sub( self.re['htmlWhitespace1'], ' ', s )
+        s = sub( self.re['htmlWhitespace2'], r'\1\2', s )
+        s = sub( self.re['htmlWhitespace3'], ' ', s )
+        
+        for pre in pres:
+            s = sub( r'#@#pre#!#', pre[1], s, 1 )
+        for style in styles:
+            tmp = style[0].replace( style[1], self.compressCss(style[1]) )
+            s = sub( r'#@#style#!#', tmp, s, 1 )
+        for script in scripts:
+            tmp = script[0].replace( script[1], self.compressJs(script[1]) )
+            s = sub( r'#@#script#!#', tmp, s, 1 )
+        return s
+        
+    def compressCss(self, s):
+        s = sub( self.re['cssComments1'], '', s )
+        s = sub( self.re['cssWhitespace1'], ' ', s )
+        s = sub( self.re['cssComments2'], '', s )
+        s = sub( self.re['cssWhitespace2'], r'\1', s )
+        s = sub( self.re['cssWhitespace3'], '', s )
+        s = sub( self.re['cssEnd'], '}', s )
+        return s
+        
+    def compressPhp(self, s):
+        phps = findall( self.re['php'], s)
+        s = sub( self.re['php'], '#@#php#!#', s )
+        s = self.compressHtml( s )
+        
+        for php in phps:
+            s = sub( r'#@#php#!#', php, s, 1 )
+        
+        return s
+        
+    def compressJs(self, s):
+        tmp = open('/tmp/wctmp', 'w')
+        tmp.write(s)
+        tmp.close()
+        
+        cmd = closurePath+' --compilation_level SIMPLE_OPTIMIZATIONS < /tmp/wctmp > /tmp/wctmpout'
+        
+        proc = subprocess.Popen([cmd], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        for line in proc.stdout.readlines():
+            sys.stdout.write(line)
+        for line in proc.stderr.readlines():
+            sys.stdout.write(line)
+        
+        proc.wait()
+        if proc.returncode != 0:
+            exit(1)
+            
+        tmp = open('/tmp/wctmpout', 'r')
+        s = tmp.read().strip()
+        tmp.close()
+        return s
+
+
+class Packer:
+    fileType = None
+    input = []
+    output = None
+    
+    def __init__(self, output, input, type=None):
+        self.input = input
+        self.type = type or self.input[0].name.split('.')[-1]
+                
+        for file in self.input[1:]:
+            if not file.name.endswith(self.type):
+                print "files must be same type"
+                exit(2)
+        # MTIME IS CHANGED BY FILE OPEN BY ARGPARSER
+        
+        if output!=None:
+            outputMtime = 0
+            try:
+                outputMtime = os.stat(output).st_mtime
+            except OSError:
+                pass
+            do = False
+            for file in self.input:
+                inputMtime = os.stat(file.name).st_mtime
+                if inputMtime > outputMtime:
+                    do = True
+            if not do:
+                print "files up to date, skipping"
+                exit(0)
+        else:
+            self.output = sys.stdout
+        
+        tc = TextCompressor(self.type)
+        compressed = tc.compress( self.readInput() )
+        self.output = open(output, 'w')
+        self.output.write( compressed )
+        
+    def readInput(self):
+        s = ''
+        for file in self.input:
+            s += file.read()
+        return s
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Pack and compress web soruce files.')
+    parser.add_argument('input', metavar='INFILE', type=argparse.FileType('r'), nargs='*', help='Input files', default=sys.stdin)
+    parser.add_argument('--output', metavar='OUTFILE', nargs=1, help='Output file')
+    parser.add_argument('--type', metavar='TYPE', nargs=1, help='Force file type')
+
+    try:
+        args = parser.parse_args()
+    except IOError as inst:
+        print inst
+        exit(1)
+    else:
+        if type(args.input).__name__ == 'file':
+            args.input = [ args.input ]
+        if type(args.output).__name__ == 'list':
+            args.output = args.output[0]
+        args.type = args.type[0] if args.type != None else None
+        
+        Packer(args.output, args.input, args.type)
+

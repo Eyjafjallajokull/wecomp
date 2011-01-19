@@ -1,0 +1,139 @@
+#!/usr/bin/python
+import os, sys, glob, subprocess
+import argparse
+import stat
+import json
+import fnmatch
+import pprint
+
+cfgFilename = 'build.json'
+defaultTask = 'build'
+cfg = []
+
+col = {
+    'info' : '\033[1m',
+    'ok' : '\033[92m',
+    'warn' : '\033[93m',
+    'fail' : '\033[91m',
+    'end' : '\033[0m'
+}
+def p(msg, colo=None):
+    if colo:
+        print '%s%s%s' % (col[colo] , msg , col['end'])
+    else:
+        print msg
+
+def readConfig(cfgFile):
+    jsons = cfgFile.read()
+    jsonobj = ''
+    try:
+        jsonobj = json.loads(jsons)
+    except ValueError as ve:
+        p('error while reading config', 'fail')
+        p(ve)
+        exit(1)
+    
+    return extendConfig(jsonobj)
+    
+def extendConfig(cfg):
+    tmp = ' --exclude='+cfgFilename
+    for item in cfg['exclude']:
+        tmp += ' --exclude='+item
+    cfg['exclude'] = tmp
+    
+    tmp = ''
+    for item in cfg['compress']:
+        for item2 in item:
+            tmp += ' --exclude='+item2
+    cfg['excludeCompress'] = tmp
+    
+    tmp = ''
+    for item in cfg['include']:
+        tmp += ' --include='+item
+    cfg['include'] = tmp
+    
+    tmp = []
+    for item in cfg['compress']:
+        tmp.append( ' '.join(item) )
+    return cfg
+    
+def defaultCfg():
+    try:
+        return open( os.path.abspath('build.json'), 'r' )
+    except IOError as inst2:
+        p(inst2, 'fail')
+        exit(2)
+        
+def execSys(cmd):
+    print cmd
+    
+    proc = subprocess.Popen([cmd], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    for line in proc.stdout.readlines():
+        sys.stdout.write(line)
+    for line in proc.stderr.readlines():
+        sys.stdout.write(line)
+        
+    proc.wait()
+    if proc.returncode != 0:
+        p('job failed','fail')
+        exit(10)
+    
+def execTask(tasks):
+    for taskName in tasks:
+        if taskName in cfg['tasks']:
+            p('Task "'+taskName+'"', 'info')
+            task = cfg['tasks'][taskName]
+            
+            if 'pre' in task:
+                for pre in task['pre']:
+                    execSys(pre)
+            
+            if 'rsync' in task:
+                tmp = ''
+                if 'compress' in task and task['compress']==True:
+                    tmp = cfg['excludeCompress']
+                cmd = 'rsync -auv --delete'+cfg['include']+cfg['exclude']+tmp+' '+(' '.join(task['rsync']))
+                execSys(cmd)
+                
+                if 'compress' in task and task['compress']==True:
+                    for c in cfg['compress']:
+                        input = len(c) and c[0] or ' '.join(c[0:-1])
+                        cmd = 'wecompress '+input+' --output='+task['rsync'][1]+'/'+c[-1]
+                        execSys(cmd)
+                        
+            elif 'exec' in task:
+                for job in task['exec']:
+                    execSys(job)
+            
+            if 'post' in task:
+                for post in task['post']:
+                    execSys(post)
+                
+            p('Task "'+taskName+'" finished', 'ok')
+        else:
+            p('nie ma takiego taska','fail')
+            exit(1)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Pack and compress web soruce files.')
+    parser.add_argument('tasks', metavar='TASK', nargs='*', help='Tasks')
+    parser.add_argument('--cfg', metavar='CONFIG', type=argparse.FileType('r'), nargs=1, help='Config file' )
+    
+    try:
+        args = parser.parse_args()
+    except IOError as inst:
+        p(inst,'fail')
+        exit(2)
+    else:
+        if len(args.tasks) == 0:
+            args.tasks.append(defaultTask)
+            
+        if args.cfg==None:
+            args.cfg = defaultCfg()
+        else:
+            args.cfg = args.cfg[0]
+        cfgFilename = args.cfg.name
+        cfg = readConfig(args.cfg)
+        
+        execTask(args.tasks)
+        
