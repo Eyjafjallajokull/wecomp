@@ -118,10 +118,12 @@ class Packer:
     fileType = None
     input = []
     output = None
+    force = False
     
-    def __init__(self, output, input, type=None):
+    def __init__(self, output, input, type=None, force=False):
         self.input = input
         self.type = type or self.input[0].name.split('.')[-1]
+        self.force = force
                 
         for file in self.input[1:]:
             if not file.name.endswith(self.type):
@@ -140,6 +142,10 @@ class Packer:
                 inputMtime = os.stat(file.name).st_mtime
                 if inputMtime > outputMtime:
                     do = True
+            
+            if self.force:
+                do = True
+
             if not do:
                 print "files up to date, skipping"
                 exit(0)
@@ -163,6 +169,7 @@ if __name__ == "__main__":
     parser.add_argument('input', metavar='INFILE', type=argparse.FileType('r'), nargs='*', help='Input files', default=sys.stdin)
     parser.add_argument('--output', metavar='OUTFILE', nargs=1, help='Output file')
     parser.add_argument('--type', metavar='TYPE', nargs=1, help='Force file type')
+    parser.add_argument('-f', action='store_true', help='Force compression (ignore mtime)')
 
     try:
         args = parser.parse_args()
@@ -175,6 +182,6 @@ if __name__ == "__main__":
         if type(args.output).__name__ == 'list':
             args.output = args.output[0]
         args.type = args.type[0] if args.type != None else None
-        
-        Packer(args.output, args.input, args.type)
+
+        Packer(args.output, args.input, args.type, args.f)
 
