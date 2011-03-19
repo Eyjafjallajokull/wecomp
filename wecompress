@@ -119,17 +119,18 @@ class Packer:
     input = []
     output = None
     force = False
+    delete = False
     
-    def __init__(self, output, input, type=None, force=False):
+    def __init__(self, output, input, args):
         self.input = input
-        self.type = type or self.input[0].name.split('.')[-1]
-        self.force = force
+        self.type = args.type or self.input[0].name.split('.')[-1]
+        self.force = args.f or False
+        self.delete = args.d or False
                 
         for file in self.input[1:]:
             if not file.name.endswith(self.type):
                 print "files must be same type"
                 exit(2)
-        # MTIME IS CHANGED BY FILE OPEN BY ARGPARSER
         
         if output!=None:
             outputMtime = 0
@@ -154,6 +155,11 @@ class Packer:
         
         tc = TextCompressor(self.type)
         compressed = tc.compress( self.readInput() )
+
+        if self.delete==True:
+            for file in self.input:
+                os.remove(file.name)            
+
         self.output = open(output, 'w')
         self.output.write( compressed )
         
@@ -170,6 +176,7 @@ if __name__ == "__main__":
     parser.add_argument('--output', metavar='OUTFILE', nargs=1, help='Output file')
     parser.add_argument('--type', metavar='TYPE', nargs=1, help='Force file type')
     parser.add_argument('-f', action='store_true', help='Force compression (ignore mtime)')
+    parser.add_argument('-d', action='store_true', help='Delete source files')
 
     try:
         args = parser.parse_args()
@@ -183,5 +190,5 @@ if __name__ == "__main__":
             args.output = args.output[0]
         args.type = args.type[0] if args.type != None else None
 
-        Packer(args.output, args.input, args.type, args.f)
+        Packer(args.output, args.input, args)
 
