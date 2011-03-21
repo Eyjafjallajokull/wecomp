@@ -1,8 +1,12 @@
 #!/usr/bin/python
-import sys, os, subprocess, stat
+import sys
+import os
+import subprocess
+import stat
 import argparse
 import string
 from re import sub, findall
+from argparse import RawTextHelpFormatter
 
 closurePath = '/home/pawel/bin/closure'
 
@@ -31,12 +35,14 @@ class TextCompressor:
     }
     
     def __init__(self, type):
+        """ Init compression with a given type. """
         if not type in self.knownTypes:
             print "unknown file type"
             exit(3)
         self.type = type
             
     def compress(self, input):
+        """ Compress string. """
         if self.type == 'html':
             return self.compressHtml(input)
         if self.type == 'js':
@@ -47,6 +53,7 @@ class TextCompressor:
             return self.compressPhp(input)
         
     def compressHtml(self, s):
+        """ Compress HTML string. """
         scripts = findall( self.re['htmlScript'], s)
         s = sub( self.re['htmlScript'], '#@#script#!#', s )
         
@@ -73,6 +80,7 @@ class TextCompressor:
         return s
         
     def compressCss(self, s):
+        """ Compress CSS string. """
         s = sub( self.re['cssComments1'], '', s )
         s = sub( self.re['cssWhitespace1'], ' ', s )
         s = sub( self.re['cssComments2'], '', s )
@@ -82,6 +90,7 @@ class TextCompressor:
         return s
         
     def compressPhp(self, s):
+        """ Compress PHP string. """
         phps = findall( self.re['php'], s)
         s = sub( self.re['php'], '#@#php#!#', s )
         s = self.compressHtml( s )
@@ -92,6 +101,7 @@ class TextCompressor:
         return s
         
     def compressJs(self, s):
+        """ Compress JS string. """
         tmp = open('/tmp/wctmp', 'w')
         tmp.write(s)
         tmp.close()
@@ -121,8 +131,9 @@ class Packer:
     force = False
     delete = False
     
-    def __init__(self, output, input, args):
-        self.input = input
+    def __init__(self, args):
+        output = args.output
+        self.input = args.input or []
         self.type = args.type or self.input[0].name.split('.')[-1]
         self.force = args.f or False
         self.delete = args.d or False
@@ -170,13 +181,31 @@ class Packer:
         return s
 
 
+
+readme = """
+Pack and compress web files.
+Currently supported file formats: %s
+
+Note: Google Closure compiler is used to compress JS. (set path in source)
+Note: PHP code will be left untouched (while compressing everything outside).
+
+Examples:
+Compress CSS file, output to stdout:
+  wecomp style.css
+Compress CSS file, output to file:
+  wecomp style.css --output style.min.css
+Join and compress JS files, output to file:
+  wecomp js/* --output main.min.js
+""" % TextCompressor.knownTypes
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Pack and compress web soruce files.')
-    parser.add_argument('input', metavar='INFILE', type=argparse.FileType('r'), nargs='*', help='Input files', default=sys.stdin)
-    parser.add_argument('--output', metavar='OUTFILE', nargs=1, help='Output file')
-    parser.add_argument('--type', metavar='TYPE', nargs=1, help='Force file type')
-    parser.add_argument('-f', action='store_true', help='Force compression (ignore mtime)')
-    parser.add_argument('-d', action='store_true', help='Delete source files')
+
+    parser = argparse.ArgumentParser(description=readme, formatter_class=RawTextHelpFormatter)
+    parser.add_argument('input', metavar='INFILE', type=argparse.FileType('r'), nargs='*', help='input files', default=sys.stdin)
+    parser.add_argument('--output', metavar='OUTFILE', nargs=1, help='output file')
+    parser.add_argument('--type', metavar='TYPE', nargs=1, help='force file type')
+    parser.add_argument('-f', action='store_true', help='force compression (ignore file modyfication time)')
+    parser.add_argument('-d', action='store_true', help='delete source files')
 
     try:
         args = parser.parse_args()
@@ -190,5 +219,5 @@ if __name__ == "__main__":
             args.output = args.output[0]
         args.type = args.type[0] if args.type != None else None
 
-        Packer(args.output, args.input, args)
+        Packer(args)
 
