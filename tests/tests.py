@@ -1,30 +1,51 @@
 import unittest
 import subprocess
+import os
 
 class TestSampleFiles(unittest.TestCase):
+
+  def setUp(self):
+    self.e('rm tmp > /dev/null 2>&1')
   
-  def test1stdout(self):
+  def testStdOut(self):
     test = 'test1'
     testfile = test+'.html'
-    cmd = '../wecomp %s' % testfile
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-    teststring = p.communicate()[0]
+    
+    teststring = self.eo('../wecomp %s' % testfile)
     
     self.commonFileTest(teststring, test)
   
-  def test1fileout(self):
+  def testFileOut(self):
     test = 'test1'
     testfile = test+'.html'
-    subprocess.Popen('rm tmp > /dev/null 2>&1', shell=True).wait()
-    cmd = '../wecomp %s --output tmp' % testfile
-    subprocess.Popen(cmd, shell=True).wait()
+    
+    self.e('../wecomp %s --output tmp' % testfile)
     teststring = open('tmp', 'r').read()
+    
+    self.commonFileTest(teststring, test)
+    
+  def testFileDelete(self):
+    test = 'test1'
+    testfile = test+'.html'
+    
+    self.e('cp %s copy.%s ' % (testfile, testfile))
+    self.e('../wecomp -d copy.%s --output tmp' % (testfile))
+    teststring = open('tmp', 'r').read()
+    
+    self.assertTrue( not os.path.isfile('copy.%s' % testfile) )
     
     self.commonFileTest(teststring, test)
     
   def commonFileTest(self, teststring, test):
     expectedString = open(test+'.output.html', 'r').read()
     self.assertEqual(teststring, expectedString)
-
+    
+  def e(self,cmd):
+    subprocess.Popen(cmd, shell=True).wait()
+    
+  def eo(self,cmd):
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+    return p.communicate()[0]
+    
 if __name__ == '__main__':
     unittest.main()
