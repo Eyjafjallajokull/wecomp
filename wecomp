@@ -23,6 +23,7 @@ class TextCompressor:
         'htmlWhitespace1': '[\r\n\t]+',
         'htmlWhitespace2': '([>#])[\s]+([<#])',
         'htmlWhitespace3': '[\s]+',
+        'htmlWhitespace4': r'\s*(=|<|<\/|>|/>)\s*',
         
         'php': '(<\?(?:php|=)[^?]+\?>)',
         
@@ -68,6 +69,7 @@ class TextCompressor:
         s = sub( self.re['htmlWhitespace1'], ' ', s )
         s = sub( self.re['htmlWhitespace2'], r'\1\2', s )
         s = sub( self.re['htmlWhitespace3'], ' ', s )
+        s = sub( self.re['htmlWhitespace4'], r'\1', s )
         
         for pre in pres:
             s = sub( r'#@#pre#!#', pre[1], s, 1 )
