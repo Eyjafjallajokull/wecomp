@@ -182,7 +182,7 @@ class Packer:
 
 
 readme = """
-Pack and compress web files.
+Pack and compress client-side source code.
 Currently supported file formats: %s
 
 Note: Google Closure compiler is used to compress JS. (set path in source)
