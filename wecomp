@@ -142,7 +142,6 @@ class Packer:
             if not file.name.endswith(self.type):
                 print "files must be same type"
                 exit(2)
-        
         if output!=None:
             outputMtime = 0
             try:
@@ -161,6 +160,7 @@ class Packer:
             if not do:
                 print "files up to date, skipping"
                 exit(0)
+            self.output = open(output, 'w')
         else:
             self.output = sys.stdout
         
@@ -171,7 +171,6 @@ class Packer:
             for file in self.input:
                 os.remove(file.name)            
 
-        self.output = open(output, 'w')
         self.output.write( compressed )
         
     def readInput(self):
