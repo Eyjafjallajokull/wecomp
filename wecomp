@@ -141,7 +141,6 @@ class Packer:
         self.type = args.type or self.input[0].name.split('.')[-1]
         self.force = args.f or False
         self.delete = args.d or False
-        #self.output = None
         
         for file in self.input[1:]:
             if not file.name.endswith(self.type):
@@ -154,15 +153,16 @@ class Packer:
                 outputMtime = os.stat(output).st_mtime
             except OSError:
                 pass
-            do = False
-            for file in self.input:
-                inputMtime = os.stat(file.name).st_mtime
-                if inputMtime > outputMtime:
-                    do = True
             
+            do = False
             if self.force:
                 do = True
-
+            else:
+                for file in self.input:
+                    inputMtime = os.stat(file.name).st_mtime
+                    if inputMtime > outputMtime:
+                        do = True
+            
             if not do:
                 print "files up to date, skipping"
                 exit(0)
