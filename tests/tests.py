@@ -22,7 +22,7 @@ class TestSampleFiles(unittest.TestCase):
     self.e('../wecomp %s --output tmp' % testfile)
     teststring = open('tmp', 'r').read()
     
-    self.commonFileTest(teststring, test)
+    self.assertTrue( os.path.isfile('tmp') )
     
   def testFileDelete(self):
     test = 'test1'
@@ -33,8 +33,8 @@ class TestSampleFiles(unittest.TestCase):
     teststring = open('tmp', 'r').read()
     
     self.assertTrue( not os.path.isfile('copy.%s' % testfile) )
+    self.assertTrue( os.path.isfile('tmp') )
     
-    self.commonFileTest(teststring, test)
     
   def commonFileTest(self, teststring, test):
     expectedString = open(test+'.output.html', 'r').read()
