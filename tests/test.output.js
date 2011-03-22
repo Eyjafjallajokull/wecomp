@@ -1,0 +1,1 @@
+function foo(a){return"foo "+a}function aa(){}alert(foo("hello world"));function foo(a){return"foo "+a}alert(foo("hello world"));function foo(a){return"foo "+a}alert(foo("hello world"));function foo(a){return"foo "+a}alert(foo("hello world"));function foo(a){return"foo "+a}alert(foo("hello world"));

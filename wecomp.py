@@ -8,12 +8,12 @@ import string
 from re import sub, findall
 from argparse import RawTextHelpFormatter
 
-closurePath = '$HOME/bin/closure'
+closure = '$HOME/bin/closure --compilation_level SIMPLE_OPTIMIZATIONS'
 
 class TextCompressor:
     """String compression class"""
     
-    knownTypes= ['css','js','html','php']
+    knownTypes = ['css','js','html','php']
     
     re = {
         'htmlScript': '(<script.*>([^<]+)</script>)',
@@ -110,7 +110,7 @@ class TextCompressor:
         tmp.write(s)
         tmp.close()
         
-        cmd = closurePath+' --compilation_level SIMPLE_OPTIMIZATIONS < /tmp/wctmp > /tmp/wctmpout'
+        cmd = closure+' < /tmp/wctmp > /tmp/wctmpout'
         
         proc = subprocess.Popen([cmd], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         for line in proc.stdout.readlines():
