@@ -1,3 +1,5 @@
+usage: wecomp [-h] [-o OUTFILE] [-t TYPE] [-f] [-d] [INFILE [INFILE ...]]
+
 Pack and compress client-side source code.
 Currently supported file formats: ['css', 'js', 'html', 'php']
 
@@ -5,20 +7,31 @@ Note: Google Closure compiler is used to compress JS. (set path in source)
 Note: PHP code will be left untouched (while compressing everything outside).
 
 Examples:
-Compress CSS file, output to stdout:
-  wecomp style.css
-Compress CSS file, output to file:
-  wecomp style.css --output style.min.css
-Join and compress JS files, output to file:
-  wecomp js/* --output main.min.js
+  Compress CSS file, work with stdin, stdout:
+    Note: when using stdin, --type must be set
+    wecomp --type css < style.css > style.min.css
+    cat style.css | wecomp --type css
+    wecomp style.css
+    
+  Compress CSS file, output to file:
+    Note: nothing will be done if output file is newer then input
+    wecomp style.css --output style.min.css
+    
+  Join and compress JS files, output to file:
+    wecomp js/* --output main.min.js
+  
+  Compress all templates:
+    for f in `find ./templates/ -name "*php"`; do 
+      wecomp -f $f $f
+    done
 
 positional arguments:
-  INFILE            input files
+  INFILE                input files
 
 optional arguments:
-  -h, --help        show this help message and exit
-  --output OUTFILE  output file
-  --type TYPE       force file type
-  -f                force compression (ignore file modyfication time)
-  -d                delete source files
-
+  -h, --help            show this help message and exit
+  -o OUTFILE, --output OUTFILE
+                        output file
+  -t TYPE, --type TYPE  force file type
+  -f                    force compression (ignore file modyfication time)
+  -d                    delete source files

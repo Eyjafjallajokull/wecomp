@@ -188,29 +188,41 @@ class Packer:
         return s
 
 
-
+s = __file__
+s = s[s.rfind('/')+1:]
 readme = """
 Pack and compress client-side source code.
-Currently supported file formats: %s
+Currently supported file formats: %(types)s
 
 Note: Google Closure compiler is used to compress JS. (set path in source)
 Note: PHP code will be left untouched (while compressing everything outside).
 
 Examples:
-Compress CSS file, output to stdout:
-  wecomp style.css
-Compress CSS file, output to file:
-  wecomp style.css --output style.min.css
-Join and compress JS files, output to file:
-  wecomp js/* --output main.min.js
-""" % TextCompressor.knownTypes
+  Compress CSS file, work with stdin, stdout:
+    Note: when using stdin, --type must be set
+    %(sc)s --type css < style.css > style.min.css
+    cat style.css | %(sc)s --type css
+    %(sc)s style.css
+    
+  Compress CSS file, output to file:
+    Note: nothing will be done if output file is newer then input
+    %(sc)s style.css --output style.min.css
+    
+  Join and compress JS files, output to file:
+    %(sc)s js/* --output main.min.js
+  
+  Compress all templates:
+    for f in `find ./templates/ -name "*php"`; do 
+      %(sc)s -f $f $f
+    done
+""" % { "types": TextCompressor.knownTypes, "sc": s}
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=readme, formatter_class=RawTextHelpFormatter)
     parser.add_argument('input', metavar='INFILE', type=argparse.FileType('r'), nargs='*', help='input files', default=sys.stdin)
-    parser.add_argument('--output', metavar='OUTFILE', nargs=1, help='output file')
-    parser.add_argument('--type', metavar='TYPE', nargs=1, help='force file type')
+    parser.add_argument('-o','--output', metavar='OUTFILE', nargs=1, help='output file')
+    parser.add_argument('-t','--type', metavar='TYPE', nargs=1, help='force file type')
     parser.add_argument('-f', action='store_true', help='force compression (ignore file modyfication time)')
     parser.add_argument('-d', action='store_true', help='delete source files')
 
