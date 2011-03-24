@@ -16,24 +16,24 @@ class TextCompressor:
     knownTypes = ['css','js','html','php']
     
     re = {
-        'htmlScript': '(<script.*>([^<]+)</script>)',
-        'htmlStyle': '(<style.*>([^<]+)</style>)',
-        'htmlPre': '(<(?:code|pre).*>[^<]+</(?:code|pre)>)',
-        'htmlComments': '<!--(.|\s)*?-->',
-        'htmlWhitespace1': '[\r\n\t]+',
-        'htmlWhitespace2': '([>#])[\s]+([<#])',
-        'htmlWhitespace3': '[\s]+',
-        'htmlWhitespace4': '\s*=\s*',
-        'htmlWhitespace5': '\s*(/?>)',
+        'htmlScript': ('(<script.*>([^<]+)</script>)', '#@#script#!#'),
+        'htmlStyle': ('(<style.*>([^<]+)</style>)', '#@#style#!#'),
+        'htmlPre': ('(<(?:code|pre).*>[^<]+</(?:code|pre)>)', '#@#pre#!#'),
+        'htmlComments': ('<!--(.|\s)*?-->', ''),
+        'htmlWhitespace1': ('[\r\n\t]+', ' '),
+        'htmlWhitespace2': ('([>#])[\s]+([<#])', r'\1\2'),
+        'htmlWhitespace3': ('[\s]+', ' '),
+        'htmlWhitespace4': ('\s*=\s*', '='),
+        'htmlWhitespace5': ('\s*(/?>)', r'\1'),
         
-        'php': '(<\?(?:php|=)[^?]+\?>)',
+        'php': ('(<\?(?:php|=)[^?]+\?>)', '#@#php#!#'),
         
-        'cssComments1': '//[^\n\r]+',
-        'cssWhitespace1': '[\r\n\t\s]+',
-        'cssComments2': '/\*.*?\*/',
-        'cssWhitespace2': '[\s]*([\{\},;:])[\s]*',
-        'cssWhitespace3': '^\s+',
-        'cssEnd': ';}'
+        'cssComments1': ('//[^\n\r]+', ''),
+        'cssWhitespace1': ('[\r\n\t\s]+', ' '),
+        'cssComments2': ('/\*.*?\*/', ''),
+        'cssWhitespace2': ('[\s]*([\{\},;:])[\s]*', r'\1'),
+        'cssWhitespace3': ('^\s+', ''),
+        'cssEnd': (';}', '}')
     }
     
     def __init__(self, type):
@@ -56,51 +56,45 @@ class TextCompressor:
         
     def compressHtml(self, s):
         """ Compress HTML string. """
-        scripts = findall( self.re['htmlScript'], s)
-        s = sub( self.re['htmlScript'], '#@#script#!#', s )
+        (s, scripts) = self.cut(s, 'htmlScript')
+        (s, styles) = self.cut(s, 'htmlStyle')
+        (s, pres) = self.cut(s, 'htmlPre')
         
-        styles = findall( self.re['htmlStyle'], s)
-        s = sub( self.re['htmlStyle'],  '#@#style#!#', s )
-        
-        pres = findall( self.re['htmlPre'], s)
-        s = sub( self.re['htmlPre'],    '#@#pre#!#', s )
-        
-        s = sub( self.re['htmlComments'], '', s )
-        
-        s = sub( self.re['htmlWhitespace1'], ' ', s )
-        s = sub( self.re['htmlWhitespace2'], r'\1\2', s )
-        s = sub( self.re['htmlWhitespace3'], ' ', s )
-        s = sub( self.re['htmlWhitespace4'], '=', s )
-        s = sub( self.re['htmlWhitespace5'], r'\1', s)
+        s = self.replace(s, 'htmlComments')
+        s = self.replace(s, 'htmlWhitespace1')
+        s = self.replace(s, 'htmlWhitespace2')
+        s = self.replace(s, 'htmlWhitespace3')
+        s = self.replace(s, 'htmlWhitespace4')
+        s = self.replace(s, 'htmlWhitespace5')
         
         for pre in pres:
-            s = sub( r'#@#pre#!#', pre[1], s, 1 )
+            s = sub( self.re['htmlPre'][1], pre[1], s, 1 )
         for style in styles:
             tmp = style[0].replace( style[1], self.compressCss(style[1]) )
-            s = sub( r'#@#style#!#', tmp, s, 1 )
+            s = sub( self.re['htmlStyle'][1], tmp, s, 1 )
         for script in scripts:
             tmp = script[0].replace( script[1], self.compressJs(script[1]) )
-            s = sub( r'#@#script#!#', tmp, s, 1 )
+            s = sub( self.re['htmlScript'][1], tmp, s, 1 )
         return s
         
     def compressCss(self, s):
         """ Compress CSS string. """
-        s = sub( self.re['cssComments1'], '', s )
-        s = sub( self.re['cssWhitespace1'], ' ', s )
-        s = sub( self.re['cssComments2'], '', s )
-        s = sub( self.re['cssWhitespace2'], r'\1', s )
-        s = sub( self.re['cssWhitespace3'], '', s )
-        s = sub( self.re['cssEnd'], '}', s )
+        s = self.replace(s, 'cssComments1')
+        s = self.replace(s, 'cssWhitespace1')
+        s = self.replace(s, 'cssComments2')
+        s = self.replace(s, 'cssWhitespace2')
+        s = self.replace(s, 'cssWhitespace3')
+        s = self.replace(s, 'cssEnd')
         return s
         
     def compressPhp(self, s):
         """ Compress PHP string. """
-        phps = findall( self.re['php'], s)
-        s = sub( self.re['php'], '#@#php#!#', s )
+        (s, phps) = self.cut(s, 'php')
+        
         s = self.compressHtml( s )
         
         for php in phps:
-            s = sub( r'#@#php#!#', php, s, 1 )
+            s = sub( self.re['php'][1], php, s, 1 )
         
         return s
         
@@ -126,7 +120,16 @@ class TextCompressor:
         s = tmp.read().strip()
         tmp.close()
         return s
-
+    
+    def replace(self, string, name):
+        """ Do the funky replace on 'string' using 'name' RegExp """
+        return sub( self.re[name][0], self.re[name][1], string )
+    
+    def cut(self, string, name):
+        """ Cut from 'string' using 'name' RegExp, return new string and matches """
+        tmp = findall( self.re[name][0], string )
+        string = sub( self.re[name][0], self.re[name][1], string )
+        return (string, tmp)
 
 class Packer:
     fileType = None
