@@ -28,7 +28,7 @@ whatever in source code at line:
 Use
 ---
 
-	wecomp [-h] [-o OUTFILE] [-t TYPE] [-f] [-d] [INFILE [INFILE ...]]
+	wecomp.py [-h] [-o OUTFILE] [-t TYPE] [-f] [-d] [INFILE [INFILE ...]]
 
 **Examples:**
 
@@ -36,26 +36,26 @@ Use
 
 	Note: when using stdin, --type must be set
 
-		wecomp --type css < style.css > style.min.css
-		cat style.css | wecomp --type css
-		wecomp style.css
+		wecomp.py --type css < style.css > style.min.css
+		cat style.css | wecomp.py --type css
+		wecomp.py style.css
     
 *	Compress CSS file, output to file:
 
 	Note: nothing will be done if output file is newer then input
 
-		wecomp style.css --output style.min.css
+		wecomp.py style.css --output style.min.css
     
 *	Join and compress JS files, output to file:
 	
-	wecomp js/* --output main.min.js
+		wecomp.py js/* --output main.min.js
   
 *	Compress all templates:
 	
 	Note: PHP code will be left untouched (while compressing everything outside).
 	
 		for f in `find ./templates/ -name "*php"`; do 
-			wecomp -f $f $f
+			wecomp.py -f $f $f
 		done
 
 **Optional arguments:**
