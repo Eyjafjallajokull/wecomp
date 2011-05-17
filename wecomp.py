@@ -8,7 +8,7 @@ import string
 from re import sub, findall
 from argparse import RawTextHelpFormatter
 
-closure = '$HOME/bin/closure --compilation_level SIMPLE_OPTIMIZATIONS'
+jscompiler = '$HOME/bin/closure --compilation_level SIMPLE_OPTIMIZATIONS'
 
 class TextCompressor:
     """String compression class"""
@@ -104,7 +104,7 @@ class TextCompressor:
         tmp.write(s)
         tmp.close()
         
-        cmd = closure+' < /tmp/wctmp > /tmp/wctmpout'
+        cmd = jscompiler+' < /tmp/wctmp > /tmp/wctmpout'
         
         proc = subprocess.Popen([cmd], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         for line in proc.stdout.readlines():
