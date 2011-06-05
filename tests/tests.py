@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath('..'))
 from wecomp import TextCompressor
 from wecomp import Packer
 
-pyexec = 'python ../wecomp.py'
+pyexec = 'python ../wecomp'
 
 class TestSampleFiles(unittest.TestCase):
 
