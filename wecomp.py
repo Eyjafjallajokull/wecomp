@@ -7,17 +7,18 @@ import argparse
 import string
 from re import sub, findall
 from argparse import RawTextHelpFormatter
-import jsmin
+
 
 # select JavaScript minification engine:
-# - internal - removes only whitespace
+# internal - removes only whitespace and comments
 jscompiler = 'internal'
 
-# - Google closure compiler
-#jscompiler = 'java -jar $HOME/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS < %(input)s > %(output)s'
+# Google closure compiler
+# jscompiler = 'java -jar $HOME/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS < %(input)s > %(output)s'
 
-# - YUI compressor
-#jscompiler = 'java -jar $HOME/yuicompressor-2.4.6.jar --type js %(input)s > %(output)s'
+# YUI compressor
+# jscompiler = 'java -jar $HOME/yuicompressor-2.4.6.jar --type js %(input)s > %(output)s'
+
 
 class TextCompressor:
     """String compression class"""
@@ -117,6 +118,7 @@ class TextCompressor:
     def compressJs(self, s):
         """ Compress JS string. """
         if jscompiler == 'internal':
+            import jsmin
             tmp = open('/tmp/wctmp', 'w')
             tmp.write(s)
             tmp.close()
