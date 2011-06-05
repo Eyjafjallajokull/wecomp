@@ -19,9 +19,9 @@ Get code:
 Configure
 ---------
 
-Wecomp uses external compier for js compression. By default it is configured to
-execute Google Closure compiler. You can change this to Yahoo YUI Compressor or
-whatever in source code at line:
+Wecomp uses jsmin.py (by Douglas Crockford) for JS compression. You can 
+also setup Google closure compiler, YUI Compressor or whatever you like.
+Set it in code:
 
 	jscompiler = '...'
 
