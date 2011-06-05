@@ -7,6 +7,7 @@ import argparse
 import string
 from re import sub, findall
 from argparse import RawTextHelpFormatter
+import jsmin
 
 # select JavaScript minification engine:
 # - internal - removes only whitespace
@@ -116,12 +117,20 @@ class TextCompressor:
     def compressJs(self, s):
         """ Compress JS string. """
         if jscompiler == 'internal':
-            s = self.replace(s, 'jsComments1')
-            s = self.replace(s, 'jsWhitespace1')
-            s = self.replace(s, 'jsComments2')
-            s = self.replace(s, 'jsWhitespace2')
-            s = self.replace(s, 'jsWhitespace3')
-            s = self.replace(s, 'jsEnd')
+            tmp = open('/tmp/wctmp', 'w')
+            tmp.write(s)
+            tmp.close()
+            
+            inputt = open('/tmp/wctmp', 'r')
+            output = open('/tmp/wctmpout', 'w')            
+            
+            jsm = jsmin.JavascriptMinify()
+            jsm.minify(inputt, output)
+            output.close()
+            
+            tmp = open('/tmp/wctmpout', 'r')
+            s = tmp.read().strip()
+            tmp.close()
             return s
             
         else:
