@@ -12,14 +12,16 @@ For python < 2.7 or < 3.2 install argparse module:
 
 	easy_install argparse
 
-Get code:
+Then:
 
 	git clone https://github.com/Eyjafjallajokull/wecomp
+	cd wecomp
+	make install
 
 Configure
 ---------
 
-Wecomp uses jsmin.py (by Douglas Crockford) for JS compression. You can 
+Wecomp uses jsmin (by Douglas Crockford) for JS compression. You can 
 also setup Google closure compiler, YUI Compressor or whatever you like.
 Set it in code:
 
@@ -28,7 +30,7 @@ Set it in code:
 Use
 ---
 
-	wecomp.py [-h] [-o OUTFILE] [-t TYPE] [-f] [-d] [INFILE [INFILE ...]]
+	wecomp [-h] [-o OUTFILE] [-t TYPE] [-f] [-d] [INFILE [INFILE ...]]
 
 **Examples:**
 
@@ -36,26 +38,26 @@ Use
 
 	Note: when using stdin, --type must be set
 
-		wecomp.py --type css < style.css > style.min.css
-		cat style.css | wecomp.py --type css
-		wecomp.py style.css
+		wecomp --type css < style.css > style.min.css
+		cat style.css | wecomp --type css
+		wecomp style.css
     
 *	Compress CSS file, output to file:
 
 	Note: nothing will be done if output file is newer then input
 
-		wecomp.py style.css --output style.min.css
+		wecomp style.css --output style.min.css
     
 *	Join and compress JS files, output to file:
 	
-		wecomp.py js/* --output main.min.js
+		wecomp js/* --output main.min.js
   
 *	Compress all templates:
 	
 	Note: PHP code will be left untouched (while compressing everything outside).
 	
 		for f in `find ./templates/ -name "*php"`; do 
-			wecomp.py -f $f $f
+			wecomp -f $f $f
 		done
 
 **Optional arguments:**
