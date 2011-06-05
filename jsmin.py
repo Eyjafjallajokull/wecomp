@@ -73,7 +73,7 @@ class JavascriptMinify(object):
         self.theLookahead = None
         if c == None:
             c = self.instream.read(1)
-        if c >= ' ':# or c == '\n':
+        if c >= ' ' or c == '\n':
             return c
         if c == '': # EOF
             return '\000'
