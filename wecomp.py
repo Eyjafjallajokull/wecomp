@@ -8,7 +8,15 @@ import string
 from re import sub, findall
 from argparse import RawTextHelpFormatter
 
-jscompiler = '$HOME/bin/closure --compilation_level SIMPLE_OPTIMIZATIONS'
+# select JavaScript minification engine:
+# - internal - removes only whitespace
+jscompiler = 'internal'
+
+# - Google closure compiler
+#jscompiler = 'java -jar $HOME/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS < %(input)s > %(output)s'
+
+# - YUI compressor
+#jscompiler = 'java -jar $HOME/yuicompressor-2.4.6.jar --type js %(input)s > %(output)s'
 
 class TextCompressor:
     """String compression class"""
@@ -33,7 +41,14 @@ class TextCompressor:
         'cssComments2': ('/\*.*?\*/', ''),
         'cssWhitespace2': ('[\s]*([\{\},;:])[\s]*', r'\1'),
         'cssWhitespace3': ('^\s+', ''),
-        'cssEnd': (';}', '}')
+        'cssEnd': (';}', '}'),
+        
+        'jsComments1': ('//[^\n\r]+', ''),
+        'jsWhitespace1': ('[\r\n\t\s]+', ' '),
+        'jsComments2': ('/\*.*?\*/', ''),
+        'jsWhitespace2': ('\s*([\{\}\(\),;:\+\*\-=])\s*', r'\1'),
+        'jsWhitespace3': ('^\s+', ''),
+        'jsEnd': (';}', '}'),
     }
     
     def __init__(self, type):
@@ -100,26 +115,36 @@ class TextCompressor:
         
     def compressJs(self, s):
         """ Compress JS string. """
-        tmp = open('/tmp/wctmp', 'w')
-        tmp.write(s)
-        tmp.close()
-        
-        cmd = jscompiler+' < /tmp/wctmp > /tmp/wctmpout'
-        
-        proc = subprocess.Popen([cmd], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        for line in proc.stdout.readlines():
-            sys.stdout.write(line)
-        for line in proc.stderr.readlines():
-            sys.stdout.write(line)
-        
-        proc.wait()
-        if proc.returncode != 0:
-            exit(1)
+        if jscompiler == 'internal':
+            s = self.replace(s, 'jsComments1')
+            s = self.replace(s, 'jsWhitespace1')
+            s = self.replace(s, 'jsComments2')
+            s = self.replace(s, 'jsWhitespace2')
+            s = self.replace(s, 'jsWhitespace3')
+            s = self.replace(s, 'jsEnd')
+            return s
             
-        tmp = open('/tmp/wctmpout', 'r')
-        s = tmp.read().strip()
-        tmp.close()
-        return s
+        else:
+            tmp = open('/tmp/wctmp', 'w')
+            tmp.write(s)
+            tmp.close()
+            
+            cmd = jscompiler % {'input':'/tmp/wctmp', 'output':'/tmp/wctmpout'}
+            print cmd
+            proc = subprocess.Popen([cmd], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            for line in proc.stdout.readlines():
+                sys.stdout.write(line)
+            for line in proc.stderr.readlines():
+                sys.stdout.write(line)
+            
+            proc.wait()
+            if proc.returncode != 0:
+                exit(1)
+                
+            tmp = open('/tmp/wctmpout', 'r')
+            s = tmp.read().strip()
+            tmp.close()
+            return s
     
     def replace(self, string, name):
         """ Do the funky replace on 'string' using 'name' RegExp """
