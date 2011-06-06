@@ -117,29 +117,19 @@ class TextCompressor:
         
     def compressJs(self, s):
         """ Compress JS string. """
+        tmp = open('/tmp/wctmp', 'w')
+        tmp.write(s)
+        tmp.close()
+        
         if jscompiler == 'internal':
-            import jsmin
-            tmp = open('/tmp/wctmp', 'w')
-            tmp.write(s)
-            tmp.close()
-            
             inputt = open('/tmp/wctmp', 'r')
             output = open('/tmp/wctmpout', 'w')            
             
-            jsm = jsmin.JavascriptMinify()
-            jsm.minify(inputt, output)
+            import jsmin
+            jsmin.JavascriptMinify().minify(inputt, output)
             output.close()
             
-            tmp = open('/tmp/wctmpout', 'r')
-            s = tmp.read().strip()
-            tmp.close()
-            return s
-            
         else:
-            tmp = open('/tmp/wctmp', 'w')
-            tmp.write(s)
-            tmp.close()
-            
             cmd = jscompiler % {'input':'/tmp/wctmp', 'output':'/tmp/wctmpout'}
             print cmd
             proc = subprocess.Popen([cmd], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -152,10 +142,10 @@ class TextCompressor:
             if proc.returncode != 0:
                 exit(1)
                 
-            tmp = open('/tmp/wctmpout', 'r')
-            s = tmp.read().strip()
-            tmp.close()
-            return s
+        tmp = open('/tmp/wctmpout', 'r')
+        s = tmp.read().strip()
+        tmp.close()
+        return s
     
     def replace(self, string, name):
         """ Do the funky replace on 'string' using 'name' RegExp """

@@ -15,17 +15,18 @@ For python < 2.7 or < 3.2 install argparse module:
 Then:
 
 	git clone https://github.com/Eyjafjallajokull/wecomp
+
+If you can, make it system wide:
+	
 	cd wecomp
-	make install
+	sudo make install
 
 Configure
 ---------
 
-Wecomp uses jsmin (by Douglas Crockford) for JS compression. You can 
+Wecomp uses jsmin (by Douglas Crockford) for JS compression by default. You can 
 also setup Google closure compiler, YUI Compressor or whatever you like.
-Set it in code:
-
-	jscompiler = '...'
+Examples how to do it included in source.
 
 Use
 ---

@@ -1,5 +1,10 @@
+prefix=/usr
+name=wecomp
+dataDir=$(prefix)/lib/$(name)
+exec=$(prefix)/bin/$(name)
+
 install:
-	cp wecomp jsmin /usr/bin/
+	mkdir $(dataDir) && cp wecomp.py jsmin.py $(dataDir) && ln -s $(dataDir)/wecomp.py $(exec)
     
 uninstall:
-	rm /usr/bin/wecomp /usr/bin/jsmin
+	rm -rf $(dataDir) $(exec)
