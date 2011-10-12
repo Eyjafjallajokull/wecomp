@@ -8,6 +8,10 @@ Supproted file types: css, js, html, php (templates)
 Install
 -------
 
+To use default JavaScript compressor install <a href="http://slimit.org/">slimit</a>:
+
+	easy_install slimit
+
 For python < 2.7 or < 3.2 install argparse module:
 
 	easy_install argparse
@@ -15,18 +19,15 @@ For python < 2.7 or < 3.2 install argparse module:
 Then:
 
 	git clone https://github.com/Eyjafjallajokull/wecomp
-
-If you can, make it system wide:
-	
 	cd wecomp
 	sudo make install
 
 Configure
 ---------
 
-Wecomp uses jsmin (by Douglas Crockford) for JS compression by default. You can 
-also setup Google closure compiler, YUI Compressor or whatever you like.
-Examples how to do it included in source.
+Wecomp uses slimit for JavaScript compression by default. You can 
+also set it to use Google closure compiler, YUI Compressor or whatever you like.
+Examples how to do it are included in source.
 
 Use
 ---

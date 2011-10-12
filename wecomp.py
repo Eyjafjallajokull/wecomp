@@ -10,14 +10,14 @@ from argparse import RawTextHelpFormatter
 
 
 # select JavaScript minification engine:
-# internal - removes only whitespace and comments
+# internal - requires slimit
 jscompiler = 'internal'
 
 # Google closure compiler
-# jscompiler = 'java -jar $HOME/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS < %(input)s > %(output)s'
+# jscompiler = 'java -jar $HOME/bin/closureCompiler.jar --compilation_level SIMPLE_OPTIMIZATIONS < %(input)s > %(output)s'
 
 # YUI compressor
-# jscompiler = 'java -jar $HOME/yuicompressor-2.4.6.jar --type js %(input)s > %(output)s'
+# jscompiler = 'java -jar $HOME/bin/yuicompressor-2.4.6.jar --type js %(input)s > %(output)s'
 
 
 class TextCompressor:
@@ -26,9 +26,9 @@ class TextCompressor:
     knownTypes = ['css','js','html','php']
     
     re = {
-        'htmlScript': ('(<script.*>([^<]+)</script>)', '#@#script#!#'),
+        'htmlScript': ('(<script[^>]*>(.*)</script>)', '#@#script#!#'),
         'htmlStyle': ('(<style.*>([^<]+)</style>)', '#@#style#!#'),
-        'htmlPre': ('(<(?:code|pre).*>[^<]+</(?:code|pre)>)', '#@#pre#!#'),
+        'htmlPre':   ('(<pre.*>[^<]+</pre>)', '#@#pre#!#'),
         'htmlComments': ('<!--(.|\s)*?-->', ''),
         'htmlWhitespace1': ('[\r\n\t]+', ' '),
         'htmlWhitespace2': ('([>#])[\s]+([<#])', r'\1\2'),
@@ -43,14 +43,7 @@ class TextCompressor:
         'cssComments2': ('/\*.*?\*/', ''),
         'cssWhitespace2': ('[\s]*([\{\},;:])[\s]*', r'\1'),
         'cssWhitespace3': ('^\s+', ''),
-        'cssEnd': (';}', '}'),
-        
-        'jsComments1': ('//[^\n\r]+', ''),
-        'jsWhitespace1': ('[\r\n\t\s]+', ' '),
-        'jsComments2': ('/\*.*?\*/', ''),
-        'jsWhitespace2': ('\s*([\{\}\(\),;:\+\*\-=])\s*', r'\1'),
-        'jsWhitespace3': ('^\s+', ''),
-        'jsEnd': (';}', '}'),
+        'cssEnd': (';}', '}')
     }
     
     def __init__(self, type):
@@ -85,7 +78,7 @@ class TextCompressor:
         s = self.replace(s, 'htmlWhitespace5')
         
         for pre in pres:
-            s = sub( self.re['htmlPre'][1], pre[1], s, 1 )
+            s = sub( self.re['htmlPre'][1], pre, s, 1 )
         for style in styles:
             tmp = style[0].replace( style[1], self.compressCss(style[1]) )
             s = sub( self.re['htmlStyle'][1], tmp, s, 1 )
@@ -117,21 +110,16 @@ class TextCompressor:
         
     def compressJs(self, s):
         """ Compress JS string. """
-        tmp = open('/tmp/wctmp', 'w')
-        tmp.write(s)
-        tmp.close()
-        
         if jscompiler == 'internal':
-            inputt = open('/tmp/wctmp', 'r')
-            output = open('/tmp/wctmpout', 'w')            
-            
-            import jsmin
-            jsmin.JavascriptMinify().minify(inputt, output)
-            output.close()
+            from slimit import minify
+            s = minify(s, mangle=False)
             
         else:
+            tmp = open('/tmp/wctmp', 'w')
+            tmp.write(s)
+            tmp.close()
+            
             cmd = jscompiler % {'input':'/tmp/wctmp', 'output':'/tmp/wctmpout'}
-            print cmd
             proc = subprocess.Popen([cmd], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             for line in proc.stdout.readlines():
                 sys.stdout.write(line)
@@ -142,9 +130,10 @@ class TextCompressor:
             if proc.returncode != 0:
                 exit(1)
                 
-        tmp = open('/tmp/wctmpout', 'r')
-        s = tmp.read().strip()
-        tmp.close()
+            tmp = open('/tmp/wctmpout', 'r')
+            s = tmp.read().strip()
+            tmp.close()
+            
         return s
     
     def replace(self, string, name):
@@ -217,9 +206,12 @@ class Packer:
         return s
 
 
-s = __file__
-s = s[s.rfind('/')+1:]
-readme = """
+
+
+if __name__ == "__main__":
+    s = __file__
+    s = s[s.rfind('/')+1:]
+    readme = """
 Pack and compress client-side source code.
 Currently supported file formats: %(types)s
 
@@ -244,9 +236,7 @@ Examples:
     for f in `find ./templates/ -name "*php"`; do 
       %(sc)s -f $f $f
     done
-""" % { "types": TextCompressor.knownTypes, "sc": s}
-
-if __name__ == "__main__":
+    """ % { "types": TextCompressor.knownTypes, "sc": s}
 
     parser = argparse.ArgumentParser(description=readme, formatter_class=RawTextHelpFormatter)
     parser.add_argument('input', metavar='INFILE', type=argparse.FileType('r'), nargs='*', help='input files', default=sys.stdin)
