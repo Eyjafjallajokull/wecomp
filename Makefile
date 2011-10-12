@@ -8,3 +8,6 @@ install: uninstall
     
 uninstall:
 	rm -rf $(dataDir) $(exec)
+
+test:
+	cd tests && python tests.py
