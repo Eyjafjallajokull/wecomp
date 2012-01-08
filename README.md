@@ -74,12 +74,3 @@ Use
 			wecomp -f $f $f
 		done
 
-**Optional arguments:**
-
-	wecomp [-h] [-o OUTFILE] [-t TYPE] [-f] [-d] [INFILE [INFILE ...]]
-
-* *-h, --help* : show help message
-* *-o OUTFILE, --output OUTFILE* : output file
-* *-t TYPE, --type TYPE* : force file type
-* *-f* : force compression (ignore file modification time)
-* *-d* : delete source files
