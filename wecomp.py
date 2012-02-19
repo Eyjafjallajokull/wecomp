@@ -31,7 +31,7 @@ class TextCompressor:
         'htmlPre':   ('(<pre.*>[^<]+</pre>)', '#@#pre#!#'),
         'htmlComments': ('<!--(.|\s)*?-->', ''),
         'htmlWhitespace1': ('[\r\n\t]+', ' '),
-        'htmlWhitespace2': ('([>#])[\s]+([<#])', r'\1\2'),
+        'htmlWhitespace2': ('([>#])[\s]+([<#])', r'\1 \2'),
         'htmlWhitespace3': ('[\s]+', ' '),
         'htmlWhitespace4': ('\s*=\s*', '='),
         'htmlWhitespace5': ('\s*(/?>)', r'\1'),
