@@ -15,20 +15,24 @@ class TestSampleFiles(unittest.TestCase):
   testTypes = TextCompressor.knownTypes
   
   def setUp(self):
-    self.e('rm tmp > /dev/null 2>&1')
+    pass
+    #self.e('rm -f tmp')
   
   
-  def testModuleCompression(self):
-    for type in self.testTypes:
-      self._testModuleCompression(type)
+  def testTextCompressor(self):
+    for file in os.listdir('dataSets'):
+      if file.startswith('in'):
+        testSetNumber = file[2:file.find('.')]
+        testSetType = file[file.find('.')+1:]
+        testSetContent = open('dataSets/'+file).read()
+        testSetExpectedContent = open('dataSets/out'+testSetNumber+'.'+testSetType).read()
+        
+        testSetResults = TextCompressor(testSetType).compress(testSetContent)
+
+        self.assertEqual(testSetExpectedContent, testSetResults)
+
   
-  def _testModuleCompression(self, type):
-    tc = TextCompressor(type)
-    teststring = tc.compress( self.r('test.'+type ) )
-    
-    self.checkContent(teststring, type)
-  
-  
+  '''
   def testScriptStdOut(self):
     for type in self.testTypes:
       self._testScriptStdOut(type)
@@ -77,6 +81,6 @@ class TestSampleFiles(unittest.TestCase):
   
   def r(self,file):
     return open(file, 'r').read()
-    
+    '''
 if __name__ == '__main__':
-    unittest.main()
+  unittest.main()
