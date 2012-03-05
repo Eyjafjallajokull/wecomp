@@ -5,7 +5,7 @@ import subprocess
 import stat
 import argparse
 import string
-from re import sub, findall
+from re import sub, findall, DOTALL
 from argparse import RawTextHelpFormatter
 
 
@@ -26,7 +26,7 @@ class TextCompressor:
     knownTypes = ['css','js','html','php']
     
     re = {
-        'htmlScript': ('(<script[^>]*>(.*)</script>)', '#@#script#!#'),
+        'htmlScript': ('(<script[^>]*>(.*?)</script>)', '#@#script#!#'),
         'htmlStyle': ('(<style.*>([^<]+)</style>)', '#@#style#!#'),
         'htmlPre':   ('(<pre.*>[^<]+</pre>)', '#@#pre#!#'),
         'htmlComments': ('<!--(.|\s)*?-->', ''),
@@ -142,8 +142,8 @@ class TextCompressor:
     
     def cut(self, string, name):
         """ Cut from 'string' using 'name' RegExp, return new string and matches """
-        tmp = findall( self.re[name][0], string )
-        string = sub( self.re[name][0], self.re[name][1], string )
+        tmp = findall( self.re[name][0], string, DOTALL )
+        string = sub( self.re[name][0], self.re[name][1], string, 0, DOTALL )
         return (string, tmp)
 
 class Packer:
