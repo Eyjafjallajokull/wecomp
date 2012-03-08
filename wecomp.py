@@ -36,7 +36,8 @@ class TextCompressor:
         'htmlWhitespace4': ('\s*=\s*', '='),
         'htmlWhitespace5': ('\s*(/?>)', r'\1'),
         
-        'php': ('(<\?(?:php|=)[^?]+\?>)', '#@#php#!#'),
+        'php': ('(<\?php.*?\?>)', '#@#php#!#'),
+        'php2': ('(<\?=.*?\?>)', '#@#php2#!#'),
         
         'cssComments1': ('//[^\n\r]+', ''),
         'cssWhitespace1': ('[\r\n\t\s]+', ' '),
@@ -100,11 +101,14 @@ class TextCompressor:
     def compressPhp(self, s):
         """ Compress PHP string. """
         (s, phps) = self.cut(s, 'php')
+        (s, php2s) = self.cut(s, 'php2')
         
         s = self.compressHtml( s )
         
         for php in phps:
             s = sub( self.re['php'][1], php, s, 1 )
+        for php in php2s:
+            s = sub( self.re['php2'][1], php, s, 1 )
         
         return s
         
