@@ -1,0 +1,2 @@
+include wecomp README.md
+recursive-include lib *
