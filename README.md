@@ -31,7 +31,7 @@ Install
 
 2.	For python < 2.7 or < 3.2 install argparse module: `sudo easy_install argparse`
 	
-3.	Finally: `sudo make install`
+3.	Finally: `sudo ./setup.py install`
 
 
 Use
