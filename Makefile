@@ -3,5 +3,5 @@ tests:
 .PHONY: tests
 
 clean:
-	rm -rf build MANIFEST
+	rm -rf build dist MANIFEST
 	find . -name *.pyc -exec rm -rf {} \;
