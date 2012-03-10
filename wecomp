@@ -2,7 +2,7 @@
 import sys
 from os.path import join, dirname, exists
 
-sourcePath = join(dirname(__file__), "lib", "wecomp.py")
+sourcePath = join(dirname(__file__), 'lib', 'wecomp.py')
 if exists(sourcePath):
 	sys.path.insert(0, dirname(sourcePath))
 	try:
@@ -12,5 +12,5 @@ if exists(sourcePath):
 else:
 	from wecomp import main
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
