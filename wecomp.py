@@ -26,7 +26,7 @@ class TextCompressor:
     knownTypes = ['css','js','html','php']
     
     re = {
-        'htmlScript': ('(<script[^>]*>(.*?)</script>)', '#@#script#!#'),
+        'htmlScript': ('(?s)(<script[^>]*>(.*?)</script>)', '#@#script#!#'),
         'htmlStyle': ('(<style.*>([^<]+)</style>)', '#@#style#!#'),
         'htmlPre':   ('(<pre.*>[^<]+</pre>)', '#@#pre#!#'),
         'htmlComments': ('<!--(.|\s)*?-->', ''),
