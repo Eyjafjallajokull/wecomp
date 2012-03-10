@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath('../lib'))
 from wecomp import TextCompressor
 from wecomp import Packer
 
-pyexec = 'python ../lib/wecomp.py'
+pyexec = 'python ../wecomp'
 
 def tearDownClass(cls):
   self.e('rm -f tmp*')
