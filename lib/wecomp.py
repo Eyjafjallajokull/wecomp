@@ -38,7 +38,8 @@ class TextCompressor:
         'htmlWhitespace4': ('\s*=\s*', '='),
         'htmlWhitespace5': ('\s*(/?>)', r'\1'),
         
-        'php': ('(<\?(?:php|=)[^?]+\?>)', '#@#php#!#'),
+        'php': ('(<\?php.*?\?>)', '#@#php#!#'),
+        'php2': ('(<\?=.*?\?>)', '#@#php2#!#'),
         
         'cssComments1': ('//[^\n\r]+', ''),
         'cssWhitespace1': ('[\r\n\t\s]+', ' '),
@@ -102,11 +103,14 @@ class TextCompressor:
     def compressPhp(self, s):
         """ Compress PHP string. """
         (s, phps) = self.cut(s, 'php')
+        (s, php2s) = self.cut(s, 'php2')
         
         s = self.compressHtml( s )
         
         for php in phps:
             s = sub( self.re['php'][1], php, s, 1 )
+        for php in php2s:
+            s = sub( self.re['php2'][1], php, s, 1 )
         
         return s
         
@@ -122,7 +126,11 @@ class TextCompressor:
             tmp.close()
             
             cmd = jscompiler % {'input':'/tmp/wctmp', 'output':'/tmp/wctmpout'}
-            proc = subprocess.Popen([cmd], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.Popen([cmd], 
+                shell=True, 
+                stdin=subprocess.PIPE, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE)
             for line in proc.stdout.readlines():
                 sys.stdout.write(line)
             for line in proc.stderr.readlines():
@@ -239,12 +247,20 @@ Examples:
     done
     """ % { "types": TextCompressor.knownTypes, "sc": s}
 
-    parser = argparse.ArgumentParser(description=readme, formatter_class=RawTextHelpFormatter)
-    parser.add_argument('input', metavar='INFILE', type=argparse.FileType('r'), nargs='*', help='input files', default=sys.stdin)
-    parser.add_argument('-o','--output', metavar='OUTFILE', nargs=1, help='output file')
-    parser.add_argument('-t','--type', metavar='TYPE', nargs=1, help='force file type')
-    parser.add_argument('-f', action='store_true', help='force compression (ignore file modyfication time)')
-    parser.add_argument('-d', action='store_true', help='delete source files')
+    parser = argparse.ArgumentParser(
+        description=readme, 
+        formatter_class=RawTextHelpFormatter)
+    parser.add_argument('input', 
+        metavar='INFILE', type=argparse.FileType('r'), nargs='*', 
+        help='input files', default=sys.stdin)
+    parser.add_argument('-o','--output', 
+        metavar='OUTFILE', nargs=1, help='output file')
+    parser.add_argument('-t','--type', 
+        metavar='TYPE', nargs=1, help='force file type')
+    parser.add_argument('-f', 
+        action='store_true', help='force compression (ignore file modyfication time)')
+    parser.add_argument('-d', 
+        action='store_true', help='delete source files')
 
     try:
         args = parser.parse_args()
