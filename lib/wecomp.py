@@ -8,6 +8,8 @@ import string
 from re import sub, findall, DOTALL
 from argparse import RawTextHelpFormatter
 
+__version__ = '0.2'
+
 
 # select JavaScript minification engine:
 # internal - requires slimit
@@ -207,8 +209,7 @@ class Packer:
 
 
 
-
-if __name__ == "__main__":
+def main():
     s = __file__
     s = s[s.rfind('/')+1:]
     readme = """
@@ -259,3 +260,6 @@ Examples:
 
         Packer(args)
 
+
+if __name__ == "__main__":
+    main()

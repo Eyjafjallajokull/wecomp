@@ -4,20 +4,24 @@ import subprocess
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../lib'))
 from wecomp import TextCompressor
 from wecomp import Packer
 
-pyexec = 'python ../wecomp.py'
+pyexec = 'python ../lib/wecomp.py'
+
+def tearDownClass(cls):
+  self.e('rm -f tmp*')
 
 class TestSampleFiles(unittest.TestCase):
 
   testTypes = TextCompressor.knownTypes
+  testTileIn = 'dataSets/in01.css'
+  testTileOut = 'dataSets/out01.css'
   
+
   def setUp(self):
-    pass
-    #self.e('rm -f tmp')
-  
+    self.e('rm -f tmp*')
   
   def testTextCompressor(self):
     for file in os.listdir('dataSets'):
@@ -31,45 +35,28 @@ class TestSampleFiles(unittest.TestCase):
 
         self.assertEqual(testSetExpectedContent, testSetResults)
 
-  
-  '''
   def testScriptStdOut(self):
-    for type in self.testTypes:
-      self._testScriptStdOut(type)
-  
-  def _testScriptStdOut(self, type):
-    teststring = self.eo(pyexec+' test.'+type)
-    self.checkContent(teststring, type)
-  
+    teststring = self.eo(pyexec+' '+self.testTileIn)
+    self.checkContent(teststring, self.testTileOut)
   
   def testScriptFileOut(self):
-    for type in self.testTypes:
-      self._testScriptFileOut(type)
-      self.setUp()
-  
-  def _testScriptFileOut(self, type):
-    self.e(pyexec+' test.'+type+' --output tmp')
-    self.checkContent(self.r('tmp'), type)
+    self.e(pyexec+' '+self.testTileIn+' --output tmp')
     self.assertTrue( os.path.isfile('tmp') )
+    self.checkContent(self.r('tmp'), self.testTileOut)
   
   
   def testScriptDelete(self):
-    for type in self.testTypes:
-      self._testScriptDelete(type)
-      self.setUp()
+    self.e('cp '+self.testTileIn+' tmp.css')
+    self.e(pyexec+' -d tmp.css --output tmpOut')
     
-  def _testScriptDelete(self, type):
-    self.e('cp test.'+type+' copy.test.'+type)
-    self.e(pyexec+' -d copy.test.'+type+' --output tmp')
+    self.assertTrue( not os.path.isfile('tmp.css') )
+    self.assertTrue( os.path.isfile('tmpOut') )
     
-    self.assertTrue( not os.path.isfile('copy.test.'+type), 'aa'+type )
-    self.assertTrue( os.path.isfile('tmp') )
-    
-    self.checkContent(self.r('tmp'), type)
+    self.checkContent(self.r('tmpOut'), self.testTileOut)
     
     
-  def checkContent(self, teststring, type):
-    expectedString = self.r('test.output.'+type)
+  def checkContent(self, teststring, outfile):
+    expectedString = self.r(outfile)
     self.assertEqual(teststring, expectedString)
     
   def e(self,cmd):
@@ -81,6 +68,7 @@ class TestSampleFiles(unittest.TestCase):
   
   def r(self,file):
     return open(file, 'r').read()
-    '''
+    
 if __name__ == '__main__':
-  unittest.main()
+  suite = unittest.TestLoader().loadTestsFromTestCase(TestSampleFiles)
+  unittest.TextTestRunner(verbosity=2).run(suite)

@@ -1,13 +1,7 @@
-prefix=/usr
-name=wecomp
-dataDir=$(prefix)/lib/$(name)
-exec=$(prefix)/bin/$(name)
-
-install: uninstall
-	mkdir -p $(dataDir) && cp wecomp.py $(dataDir) && ln -s $(dataDir)/wecomp.py $(exec)
-    
-uninstall:
-	rm -rf $(dataDir) $(exec)
-
-test:
+tests:
 	cd tests && python tests.py
+.PHONY: tests
+
+clean:
+	rm -rf build MANIFEST
+	find . -name *.pyc -exec rm -rf {} \;
