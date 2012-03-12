@@ -12,38 +12,33 @@ Features:
 Install
 -------
 
-1.	Get code: `git clone https://github.com/Eyjafjallajokull/wecomp`
-1.	By default script uses [slimit](http://slimit.org/) JavaScript compressor. To install this module simply do: `sudo easy_install slimit`
+	git clone https://github.com/Eyjafjallajokull/wecomp
+	cd wecomp
+	sudo easy_install slimit
+	for python < 2.7 or < 3.2: sudo easy_install argparse
+	sudo ./setup.py install
 
-	-- or --
-	
-	You can also configure script to use Google closure compiler, YUI Compressor or whatever you like. Simply open `wecomp.py`, comment line:
+Configure (optional)
+--------------------
 
-		jscompiler = 'internal'
+By default script uses [slimit](http://slimit.org/) JavaScript compressor. Optionally you can set it to use Google closure compiler, YUI Compressor or whatever you like. Simply create file ~/.wecomp with contents:
 
-	then set up your own compressing command, for example:
-
-		# Google closure compiler
-		jscompiler = 'java -jar $HOME/bin/closureCompiler.jar --compilation_level SIMPLE_OPTIMIZATIONS < %(input)s > %(output)s'
-		# YUI compressor
-		jscompiler = 'java -jar $HOME/bin/yuicompressor-2.4.6.jar --type js %(input)s > %(output)s'
-
-
-2.	For python < 2.7 or < 3.2 install argparse module: `sudo easy_install argparse`
-	
-3.	Finally: `sudo ./setup.py install`
-
+	[global]
+	# Google Closure compiler
+	jscompiler = 'java -jar $HOME/lib/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS < %(input)s > %(output)s'
+	# or for YUI
+	# jscompiler = 'java -jar $HOME/lib/yuicompressor-2.4.6.jar --type js %(input)s > %(output)s'
 
 Use
 ---
 
 	wecomp [-h] [-o OUTFILE] [-t TYPE] [-f] [-d] [INFILE [INFILE ...]]
 
-* `-h, --help` : show help message
-* `-o OUTFILE, --output OUTFILE` : output file
-* `-t TYPE, --type TYPE` : force file type
-* `-f` : force compression (ignore file modification time)
-* `-d` : delete source files
+* `-h, --help` show help message
+* `-o OUTFILE, --output OUTFILE` output file
+* `-t TYPE, --type TYPE` force file type
+* `-f` force compression (ignore file modification time)
+* `-d` delete source files
 
 
 **Examples:**

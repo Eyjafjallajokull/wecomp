@@ -6,20 +6,15 @@ import stat
 import argparse
 import string
 from re import sub, findall
-from argparse import RawTextHelpFormatter
+from ConfigParser import RawConfigParser
 
 __version__ = '0.2'
 
 
-# select JavaScript minification engine:
-# internal - requires slimit
-jscompiler = 'internal'
-
-# Google closure compiler
-# jscompiler = 'java -jar $HOME/bin/closureCompiler.jar --compilation_level SIMPLE_OPTIMIZATIONS < %(input)s > %(output)s'
-
-# YUI compressor
-# jscompiler = 'java -jar $HOME/bin/yuicompressor-2.4.6.jar --type js %(input)s > %(output)s'
+config = RawConfigParser()
+config.add_section('global')
+config.set('global','compiler','internal')
+config.read(os.environ['HOME']+'/.wecomp')
 
 
 class TextCompressor:
@@ -116,6 +111,7 @@ class TextCompressor:
         
     def compressJs(self, s):
         """ Compress JS string. """
+        jscompiler = config.get('global', 'jscompiler')
         if jscompiler == 'internal':
             from slimit import minify
             s = minify(s, mangle=False)
@@ -247,6 +243,8 @@ Examples:
     done
     """ % { "types": TextCompressor.knownTypes, "sc": s}
 
+
+    from argparse import RawTextHelpFormatter
     parser = argparse.ArgumentParser(
         description=readme, 
         formatter_class=RawTextHelpFormatter)
@@ -267,14 +265,15 @@ Examples:
     except IOError as inst:
         print inst
         exit(1)
-    else:
-        if type(args.input).__name__ == 'file':
-            args.input = [ args.input ]
-        if type(args.output).__name__ == 'list':
-            args.output = args.output[0]
-        args.type = args.type[0] if args.type != None else None
+    
+    if type(args.input).__name__ == 'file':
+        args.input = [ args.input ]
+    if type(args.output).__name__ == 'list':
+        args.output = args.output[0]
+    args.type = args.type[0] if args.type != None else None
 
-        Packer(args)
+
+    Packer(args)
 
 
 if __name__ == "__main__":
