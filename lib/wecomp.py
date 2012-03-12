@@ -13,7 +13,7 @@ __version__ = '0.2'
 
 config = RawConfigParser()
 config.add_section('global')
-config.set('global','compiler','internal')
+config.set('global','jscompiler','internal')
 config.read(os.environ['HOME']+'/.wecomp')
 
 
