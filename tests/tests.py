@@ -16,43 +16,63 @@ def tearDownClass(cls):
 class TestSampleFiles(unittest.TestCase):
 
   testTypes = TextCompressor.knownTypes
-  testTileIn = 'dataSets/in01.css'
-  testTileOut = 'dataSets/out01.css'
+  testFileIn = 'testTextCompressor/in01.css'
+  testFileOut = 'testTextCompressor/out01.css'
   
 
   def setUp(self):
     self.e('rm -f tmp*')
   
   def testTextCompressor(self):
-    for file in os.listdir('dataSets'):
+    '''Test output of TextCompressor module for different types of files'''
+    for file in os.listdir('testTextCompressor'):
       if file.startswith('in'):
-        testSetNumber = file[2:file.find('.')]
-        testSetType = file[file.find('.')+1:]
-        testSetContent = open('dataSets/'+file).read()
-        testSetExpectedContent = open('dataSets/out'+testSetNumber+'.'+testSetType).read()
+        testSetNumber = file[2:4]
+        testSetType = file[5:]
+        testSetContent = open('testTextCompressor/'+file).read()
+        testSetExpectedContent = open('testTextCompressor/out'+testSetNumber+'.'+testSetType).read()
         
         testSetResults = TextCompressor(testSetType).compress(testSetContent)
 
         self.assertEqual(testSetExpectedContent, testSetResults)
 
+  def testScriptMerge(self):
+    '''Test output 
+    ddir = 'testScriptMerge/'
+    files = os.listdir(ddir)
+    for file in files:
+      if file.find('a.') != -1:
+        mergeFiles = []
+        testSetNumber = file[2:4]
+        testSetType = file[6:]
+        for tmp in files:
+          if tmp.startswith('in'+testSetNumber) and tmp.endswith(testSetType):
+            mergeFiles.append(ddir+tmp)
+        
+        testSetExpectedContent = open(ddir+'out'+testSetNumber+'.'+testSetType).read()
+        
+        self.e(pyexec+' '+(' '.join(mergeFiles))+' --output tmp')
+
+        self.assertEqual(testSetExpectedContent, self.r('tmp'))
+
   def testScriptStdOut(self):
-    teststring = self.eo(pyexec+' '+self.testTileIn)
-    self.checkContent(teststring, self.testTileOut)
+    teststring = self.eo(pyexec+' '+self.testFileIn)
+    self.checkContent(teststring, self.testFileOut)
   
   def testScriptFileOut(self):
-    self.e(pyexec+' '+self.testTileIn+' --output tmp')
+    self.e(pyexec+' '+self.testFileIn+' --output tmp')
     self.assertTrue( os.path.isfile('tmp') )
-    self.checkContent(self.r('tmp'), self.testTileOut)
+    self.checkContent(self.r('tmp'), self.testFileOut)
   
   
   def testScriptDelete(self):
-    self.e('cp '+self.testTileIn+' tmp.css')
+    self.e('cp '+self.testFileIn+' tmp.css')
     self.e(pyexec+' -d tmp.css --output tmpOut')
     
     self.assertTrue( not os.path.isfile('tmp.css') )
     self.assertTrue( os.path.isfile('tmpOut') )
     
-    self.checkContent(self.r('tmpOut'), self.testTileOut)
+    self.checkContent(self.r('tmpOut'), self.testFileOut)
     
     
   def checkContent(self, teststring, outfile):
