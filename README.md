@@ -25,9 +25,9 @@ By default script uses [slimit](http://slimit.org/) JavaScript compressor. Optio
 
 	[global]
 	# Google Closure compiler
-	jscompiler = 'java -jar $HOME/lib/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS < %(input)s > %(output)s'
+	jscompiler = java -jar $HOME/lib/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS < %(input)s > %(output)s
 	# or for YUI
-	# jscompiler = 'java -jar $HOME/lib/yuicompressor-2.4.6.jar --type js %(input)s > %(output)s'
+	# jscompiler = java -jar $HOME/lib/yuicompressor-2.4.6.jar --type js %(input)s > %(output)s
 
 Use
 ---
